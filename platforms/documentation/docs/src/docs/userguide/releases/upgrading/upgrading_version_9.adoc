@@ -58,6 +58,33 @@ org.gradle.configuration-cache.unsafe.skip-task-logging-listeners-serialization=
 
 This property is a temporary opt-out and will be removed in a future Gradle release.
 
+=== Deprecations
+
+[[config_time_external_processes]]
+==== Starting external processes at configuration time with `ExecOperations` and Java standard APIs
+
+Starting an external process at configuration time with `ExecOperations` or the Java standard APIs is now deprecated. This includes:
+
+- `ExecOperations.exec` and `ExecOperations.javaexec` invoked directly at configuration time.
+- `java.lang.ProcessBuilder.start()` and `ProcessBuilder.startPipeline(...)`.
+- `java.lang.Runtime.exec(...)` (all overloads).
+- The Groovy process helpers `String.execute(...)`, `String[].execute(...)`, and `List.execute(...)`.
+
+This does *not* affect uses of the `ProviderFactory.exec` / `ProviderFactory.javaexec` providers (`providers.exec` / `providers.javaexec`) or a link:{userManualPath}/configuration_cache_requirements.html#config_cache:requirements:external_processes[`ValueSource`] that runs a process inside — those remain the supported way to run a process at configuration time.
+
+Starting an external process at configuration time in any of the deprecated ways is already an error when the configuration cache is enabled.
+To simplify preparation for the configuration cache being enabled by default in Gradle 10, and to open the way to the configuration cache becoming the only mode of execution, Gradle now unconditionally deprecates behaviors that are unsupported with the configuration cache.
+
+Migrate to one of the following, in order of preference:
+
+1. *Move the process execution into a task*, so it runs at execution time and benefits from build caching, up-to-date checks, and work avoidance.
+Use an link:{javadocPath}/org/gradle/api/tasks/Exec.html[`Exec`] or link:{javadocPath}/org/gradle/api/tasks/JavaExec.html[`JavaExec`] task, or a custom task that injects link:{javadocPath}/org/gradle/process/ExecOperations.html[`ExecOperations`] and runs the process in its task action.
+2. For simple cases, use link:{javadocPath}/org/gradle/api/provider/ProviderFactory.html#exec-org.gradle.api.Action-[`providers.exec`] / link:{javadocPath}/org/gradle/api/provider/ProviderFactory.html#javaexec-org.gradle.api.Action-[`providers.javaexec`].
+Prefer wiring the returned provider lazily into task inputs, and call `get()` only as a last resort.
+3. For more complex output processing, use a link:{userManualPath}/configuration_cache_requirements.html#config_cache:requirements:external_processes[`ValueSource`] that injects `ExecOperations` (or uses `java.lang.ProcessBuilder` directly).
+The same guidance about wiring the provider lazily to task inputs applies.
+
+This behavior will become an error in Gradle 11.
 
 [[changes_9.7.0]]
 == Upgrading from 9.6.0 and earlier
