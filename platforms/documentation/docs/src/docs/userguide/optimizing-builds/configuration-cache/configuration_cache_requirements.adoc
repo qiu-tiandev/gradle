@@ -587,6 +587,10 @@ Because `obtain()` runs on every build, it is recommended to keep the implementa
 
 TIP: Plugin and build scripts should avoid running external processes at configuration time.
 
+Starting an external process at configuration time via `ExecOperations.exec` / `ExecOperations.javaexec`, `java.lang.ProcessBuilder`, `java.lang.Runtime.exec`, or the Groovy `String` / `String[]` / `List` `execute()` helpers is *deprecated* as of Gradle 9.7 and will become an error in Gradle 11.
+This deprecation only fires when the Configuration Cache is disabled; when it is enabled, the same behavior is already reported as a Configuration Cache problem.
+`providers.exec`, `providers.javaexec`, and `ValueSource` implementations are unaffected; those remain the supported way to run a process at configuration time.
+
 You should avoid using these APIs for running processes during configuration:
 
 - *Java/Kotlin*: `ProcessBuilder`, `Runtime.exec(...)`, etc...
