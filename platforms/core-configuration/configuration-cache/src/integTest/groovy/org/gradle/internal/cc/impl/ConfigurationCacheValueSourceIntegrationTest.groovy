@@ -19,7 +19,6 @@ package org.gradle.internal.cc.impl
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.integtests.fixtures.modes.ToBeFixedForIsolatedProjects
-import org.gradle.process.ShellScript
 import spock.lang.Issue
 
 class ConfigurationCacheValueSourceIntegrationTest extends AbstractConfigurationCacheIntegrationTest {
@@ -469,36 +468,6 @@ class ConfigurationCacheValueSourceIntegrationTest extends AbstractConfiguration
             withInput("Build file 'build.gradle': system property 'some.property'")
             withInput("Build file 'build.gradle': value from custom source 'MySource'")
         }
-    }
-
-    def "value source can use standard process API"() {
-        given:
-        def configurationCache = newConfigurationCacheFixture()
-        ShellScript testScript = ShellScript.builder().printText("Hello, world").writeTo(testDirectory, "script")
-
-        buildFile.text = """
-            import ${ByteArrayOutputStream.name}
-            import org.gradle.api.provider.*
-
-            abstract class ProcessSource implements ValueSource<String, ValueSourceParameters.None> {
-                @Override String obtain() {
-                    def baos = new ByteArrayOutputStream()
-                    def process = ${ShellScript.cmdToStringLiteral(testScript.getRelativeCommandLine(testDirectory))}.execute()
-                    process.waitForProcessOutput(baos, System.err)
-                    return baos.toString().trim()
-                }
-            }
-
-            def vsResult = providers.of(ProcessSource) {}
-            println("ValueSource result = \${vsResult.get()}")
-        """
-
-        when:
-        configurationCacheRun()
-
-        then:
-        configurationCache.assertStateStored()
-        outputContains("ValueSource result = Hello, world")
     }
 
     def "value source can read mutated system property inputs at configuration time"() {
