@@ -1884,16 +1884,17 @@ This method is only meant to be called on configurations which allow the (non-de
     private DefaultConfigurationFactory confFactory(String projectPath, String buildPath) {
         def build = Path.path(buildPath)
         def project = Path.path(projectPath)
-        def buildTreePath = build.append(Path.path(projectPath))
-        def identity = project.name != null ? ProjectIdentity.forSubproject(build, project) : ProjectIdentity.forRootProject(build, "foo")
+        def identity = project.name != null
+            ? ProjectIdentity.forSubproject(build, project)
+            : ProjectIdentity.forRootProject(build, "foo")
 
-        def domainObjectContext = Stub(DomainObjectContext)
-        _ * domainObjectContext.identityPath(_) >> { String p -> buildTreePath.child(p) }
-        _ * domainObjectContext.projectPath(_) >> { String p -> project.child(p) }
-        _ * domainObjectContext.buildPath >> build
-        _ * domainObjectContext.projectIdentity >> identity
-        _ * domainObjectContext.model >> StandaloneDomainObjectContext.ANONYMOUS
-        _ * domainObjectContext.equals(_) >> true // In these tests, we assume we're in the same context
+        def domainObjectContext = Stub(DomainObjectContext) {
+            getBuildPath() >> identity.buildPath
+            getIdentityPath() >> identity.buildTreePath
+            getProjectIdentity() >> identity
+            getModel() >> StandaloneDomainObjectContext.ANONYMOUS
+            equals(_) >> true // In these tests, we assume we're in the same context
+        }
 
         def publishArtifactNotationParser = new PublishArtifactNotationParserFactory(
             TestUtil.objectFactory(),

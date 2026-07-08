@@ -129,13 +129,8 @@ public abstract class StandaloneDomainObjectContext implements DomainObjectConte
     }
 
     @Override
-    public Path identityPath(String name) {
-        return Path.path(name);
-    }
-
-    @Override
-    public Path projectPath(String name) {
-        return Path.path(name);
+    public @Nullable Path getIdentityPath() {
+        return null;
     }
 
     @Override

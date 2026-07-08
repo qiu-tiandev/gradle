@@ -109,6 +109,7 @@ import org.gradle.util.internal.CollectionUtils;
 import org.gradle.util.internal.ConfigureUtil;
 import org.gradle.util.internal.WrapUtil;
 import org.jspecify.annotations.Nullable;
+
 import javax.inject.Inject;
 import java.io.File;
 import java.util.ArrayDeque;
@@ -131,6 +132,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
 import static org.gradle.api.internal.artifacts.configurations.ConfigurationInternal.InternalState.UNRESOLVED;
 import static org.gradle.util.internal.ConfigureUtil.configure;
 
@@ -158,7 +160,6 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
     private ListenerBroadcast<DependencyResolutionListener> dependencyResolutionListeners;
 
     private final Path identityPath;
-    private final Path projectPath;
 
     private final String name;
     private final boolean isDetached;
@@ -234,8 +235,7 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
     ) {
         super(configurationServices.getTaskDependencyFactory());
         this.userCodeApplicationContext = userCodeApplicationContext;
-        this.identityPath = domainObjectContext.identityPath(name);
-        this.projectPath = domainObjectContext.projectPath(name);
+        this.identityPath = getIdentityPath(domainObjectContext, name);
         this.name = name;
         this.isDetached = isDetached;
         this.resolver = resolver;
@@ -295,6 +295,14 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
             }
         };
         this.extendsFrom = new ExtendedConfigurations(validateExtendedConfiguration, configurationServices.getProviderFactory());
+    }
+
+    private static Path getIdentityPath(DomainObjectContext domainObjectContext, String name) {
+        Path ownerIdPath = domainObjectContext.getIdentityPath();
+        if (ownerIdPath == null) {
+            return Path.path(name);
+        }
+        return ownerIdPath.child(name);
     }
 
     private static Action<String> validateMutationType(final MutationValidator mutationValidator, final MutationType type) {
@@ -1683,7 +1691,7 @@ public abstract class DefaultConfiguration extends AbstractFileCollection implem
 
         @Override
         public String getPath() {
-            return configuration.projectPath.asString();
+            return configuration.identityPath.asString();
         }
 
         @Override

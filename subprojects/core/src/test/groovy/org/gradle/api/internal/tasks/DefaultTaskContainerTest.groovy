@@ -67,12 +67,7 @@ class DefaultTaskContainerTest extends AbstractPolymorphicDomainObjectContainerS
         "project"
     )
     private project = Mock(ProjectInternal, name: "<project>") {
-        identityPath(_) >> { String name ->
-            Path.path(":project").child(name)
-        }
-        projectPath(_) >> { String name ->
-            Path.path(":project").child(name)
-        }
+        getIdentityPath() >> Path.path(":project")
         getGradle() >> Mock(GradleInternal) {
             getIdentityPath() >> Path.path(":")
         }
