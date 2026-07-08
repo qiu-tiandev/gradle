@@ -339,6 +339,7 @@ public abstract class IdeaProject implements IdeWorkspace {
     /**
      * The project-level libraries to be added to the IDEA project.
      */
+    // TODO: deprecate in Gradle 9.x — only the removed ipr generation consumed this
     public Set<ProjectLibrary> getProjectLibraries() {
         return projectLibraries;
     }

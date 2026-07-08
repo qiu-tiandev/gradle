@@ -91,6 +91,7 @@ public abstract class IdeaModel {
     /**
      * Configures the target IDEA version.
      */
+    // TODO: deprecate in Gradle 9.x — its only reader was the removed IdeaScalaConfigurer
     public String getTargetVersion() {
         return targetVersion;
     }
