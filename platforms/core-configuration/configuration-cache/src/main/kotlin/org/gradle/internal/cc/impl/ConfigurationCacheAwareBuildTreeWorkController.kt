@@ -61,7 +61,16 @@ class ConfigurationCacheAwareBuildTreeWorkController(
             }
 
             if (!result.isSuccessful) {
-                return@withNewWorkGraph TaskRunResult.ofScheduleFailure(result.failure.get())
+                return@withNewWorkGraph if (cache.isLoaded) {
+                    cache.recoverFromFailedLoad(result.failure.get())
+                    resetBuildModels()
+                    workGraph.withNewWorkGraph { graph ->
+                        val finalizedGraph = workPreparer.scheduleRequestedTasks(graph, taskSelector)
+                        TaskRunResult.ofExecutionResult(workExecutor.execute(finalizedGraph))
+                    }
+                } else {
+                    TaskRunResult.ofScheduleFailure(result.failure.get())
+                }
             }
 
             // There are four outcomes:
@@ -90,17 +99,21 @@ class ConfigurationCacheAwareBuildTreeWorkController(
 
         // Store and reload the graph for the execution.
         cache.finalizeCacheEntry()
-        buildRegistry.visitBuilds { build ->
-            build.beforeModelReset().rethrow()
-        }
-        buildRegistry.visitBuilds { build ->
-            build.resetModel()
-        }
+        resetBuildModels()
 
         return workGraph.withNewWorkGraph { graph ->
             val finalizedGraph = cache.loadRequestedTasks(graph, scheduleTaskSelectorPostProcessing)
             maybeDumpHeap("cc-miss-load")
             TaskRunResult.ofExecutionResult(workExecutor.execute(finalizedGraph))
+        }
+    }
+
+    private fun resetBuildModels() {
+        buildRegistry.visitBuilds { build ->
+            build.beforeModelReset().rethrow()
+        }
+        buildRegistry.visitBuilds { build ->
+            build.resetModel()
         }
     }
 
