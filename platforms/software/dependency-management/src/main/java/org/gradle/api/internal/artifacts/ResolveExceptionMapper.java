@@ -111,11 +111,10 @@ public class ResolveExceptionMapper {
     }
 
     private boolean settingsRepositoriesIgnored() {
-        if (!(domainObjectContext instanceof ProjectInternal)) {
+        ProjectInternal project = domainObjectContext.getProject();
+        if (project == null) {
             return false;
         }
-
-        ProjectInternal project = (ProjectInternal) domainObjectContext;
 
         boolean hasSettingsRepos;
         try {

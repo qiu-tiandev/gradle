@@ -47,7 +47,9 @@ import org.gradle.api.file.FileTree;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.file.SyncSpec;
 import org.gradle.api.internal.CollectionCallbackActionDecorator;
+import org.gradle.api.internal.DomainObjectContext;
 import org.gradle.api.internal.DynamicObjectAware;
+import org.gradle.api.internal.FeaturePreviews;
 import org.gradle.api.internal.GradleInternal;
 import org.gradle.api.internal.ProcessOperations;
 import org.gradle.api.internal.artifacts.DependencyManagementServices;
@@ -91,7 +93,6 @@ import org.gradle.internal.Actions;
 import org.gradle.internal.Cast;
 import org.gradle.internal.Factories;
 import org.gradle.internal.Factory;
-import org.gradle.api.internal.FeaturePreviews;
 import org.gradle.internal.buildoption.FeatureFlags;
 import org.gradle.internal.buildoption.InternalOption;
 import org.gradle.internal.buildoption.InternalOptions;
@@ -108,7 +109,6 @@ import org.gradle.internal.metaobject.BeanDynamicObject;
 import org.gradle.internal.metaobject.DynamicInvokeResult;
 import org.gradle.internal.metaobject.DynamicObject;
 import org.gradle.internal.metaobject.HierarchicalDynamicObject;
-import org.gradle.internal.model.ModelContainer;
 import org.gradle.internal.model.RuleBasedPluginListener;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.resource.TextUriResourceLoader;
@@ -654,11 +654,6 @@ public abstract class DefaultProject extends AbstractPluginAware implements Proj
     }
 
     @Override
-    public Path identityPath(String name) {
-        return getIdentityPath().child(name);
-    }
-
-    @Override
     public Path getProjectPath() {
         return owner.getProjectPath();
     }
@@ -669,38 +664,8 @@ public abstract class DefaultProject extends AbstractPluginAware implements Proj
     }
 
     @Override
-    public ModelContainer<ProjectInternal> getModel() {
-        return getOwner();
-    }
-
-    @Override
     public PluginContainer getPlugins() {
         return super.getPlugins();
-    }
-
-    @Override
-    public Path getBuildPath() {
-        return gradle.getIdentityPath();
-    }
-
-    @Override
-    public Path projectPath(String name) {
-        return getProjectPath().child(name);
-    }
-
-    @Override
-    public boolean isScript() {
-        return false;
-    }
-
-    @Override
-    public boolean isRootScript() {
-        return false;
-    }
-
-    @Override
-    public boolean isPluginContext() {
-        return false;
     }
 
     @Override
@@ -1602,7 +1567,7 @@ public abstract class DefaultProject extends AbstractPluginAware implements Proj
         DependencyResolutionServices resolver = dms.newDetachedResolver(
             services.get(FileResolver.class),
             services.get(FileCollectionFactory.class),
-            StandaloneDomainObjectContext.detachedFrom(this)
+            StandaloneDomainObjectContext.detachedFrom(services.get(DomainObjectContext.class))
         );
 
         return new LocalDetachedResolver(resolver);

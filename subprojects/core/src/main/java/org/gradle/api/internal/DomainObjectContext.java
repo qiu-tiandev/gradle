@@ -18,13 +18,17 @@ package org.gradle.api.internal;
 import org.gradle.api.Describable;
 import org.gradle.api.internal.project.ProjectIdentity;
 import org.gradle.api.internal.project.ProjectInternal;
+import org.gradle.api.internal.project.ProjectState;
 import org.gradle.internal.model.ModelContainer;
+import org.gradle.internal.service.scopes.Scope;
+import org.gradle.internal.service.scopes.ServiceScope;
 import org.gradle.util.Path;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The owner/context of a Dependency Management instance.
+ * Models and controls access to an abstract set of related mutable objects.
  */
+@ServiceScope(Scope.Project.class)
 public interface DomainObjectContext extends Describable {
 
     /**
@@ -40,17 +44,20 @@ public interface DomainObjectContext extends Describable {
     /**
      * If this context represents a project, its identity.
      */
-    @Nullable
-    ProjectIdentity getProjectIdentity();
+    @Nullable ProjectIdentity getProjectIdentity();
 
     /**
      * If this context represents a project, the project.
      *
      * NOTE: This method should be avoided if at all possible. Instead, rely on
-     * {@link #getProjectIdentity()}, or if not possible, prefer {@code getProject().getOwner()}.
+     * {@link #getProjectIdentity()}, or if not possible, prefer {@link #getProjectState()}.
      */
-    @Nullable
-    ProjectInternal getProject();
+    @Nullable ProjectInternal getProject();
+
+    /**
+     * If this context represents a project, the project state.
+     */
+    @Nullable ProjectState getProjectState();
 
     /**
      * The container that holds the model for this context, to allow synchronized access to the model.
@@ -90,4 +97,5 @@ public interface DomainObjectContext extends Describable {
     default boolean isDetachedState() {
         return false;
     }
+
 }

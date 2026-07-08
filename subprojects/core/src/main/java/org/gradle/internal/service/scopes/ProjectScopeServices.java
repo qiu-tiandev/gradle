@@ -19,6 +19,7 @@ package org.gradle.internal.service.scopes;
 import org.gradle.api.component.SoftwareComponentContainer;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.internal.CollectionCallbackActionDecorator;
+import org.gradle.api.internal.DomainObjectContext;
 import org.gradle.api.internal.GradleInternal;
 import org.gradle.api.internal.artifacts.DependencyManagementServices;
 import org.gradle.api.internal.artifacts.dsl.dependencies.ProjectFinder;
@@ -142,7 +143,11 @@ public class ProjectScopeServices implements ServiceRegistrationProvider {
         DependencyManagementServices dependencyManagementServices
     ) {
         registration.add(ProjectInternal.class, project);
-        dependencyManagementServices.addDslServices(registration, project);
+
+        ProjectDomainObjectContext domainObjectContext = new ProjectDomainObjectContext(project.getOwner());
+        registration.add(DomainObjectContext.class, domainObjectContext);
+
+        dependencyManagementServices.addDslServices(registration, domainObjectContext);
         for (GradleModuleServices services : gradleModuleServiceProviders) {
             services.registerProjectServices(registration);
         }
@@ -310,7 +315,7 @@ public class ProjectScopeServices implements ServiceRegistrationProvider {
             project.getClassLoaderScope(),
             fileResolver,
             fileCollectionFactory,
-            StandaloneDomainObjectContext.forProjectBuildscript(project)
+            StandaloneDomainObjectContext.forProjectBuildscript(project.getOwner())
         );
     }
 

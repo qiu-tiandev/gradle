@@ -19,6 +19,7 @@ package org.gradle.api.internal.initialization;
 import org.gradle.api.internal.DomainObjectContext;
 import org.gradle.api.internal.project.ProjectIdentity;
 import org.gradle.api.internal.project.ProjectInternal;
+import org.gradle.api.internal.project.ProjectState;
 import org.gradle.groovy.scripts.ScriptSource;
 import org.gradle.internal.model.CalculatedModelValue;
 import org.gradle.internal.model.ModelContainer;
@@ -80,12 +81,12 @@ public abstract class StandaloneDomainObjectContext implements DomainObjectConte
     /**
      * A domain object context for resolution within a project's buildscript.
      */
-    public static StandaloneDomainObjectContext forProjectBuildscript(ProjectInternal project) {
+    public static StandaloneDomainObjectContext forProjectBuildscript(ProjectState project) {
         return new StandaloneDomainObjectContext() {
 
             @Override
             public Path getBuildPath() {
-                return project.getBuildPath();
+                return project.getIdentity().getBuildPath();
             }
 
             @Override
@@ -97,6 +98,7 @@ public abstract class StandaloneDomainObjectContext implements DomainObjectConte
             public boolean isRootScript() {
                 return false;
             }
+
         };
     }
 
@@ -136,15 +138,18 @@ public abstract class StandaloneDomainObjectContext implements DomainObjectConte
         return Path.path(name);
     }
 
-    @Nullable
     @Override
-    public ProjectIdentity getProjectIdentity() {
+    public @Nullable ProjectIdentity getProjectIdentity() {
         return null;
     }
 
-    @Nullable
     @Override
-    public ProjectInternal getProject() {
+    public @Nullable ProjectInternal getProject() {
+        return null;
+    }
+
+    @Override
+    public @Nullable ProjectState getProjectState() {
         return null;
     }
 
