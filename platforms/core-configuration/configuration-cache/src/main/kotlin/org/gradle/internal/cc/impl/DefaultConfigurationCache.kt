@@ -348,7 +348,9 @@ class DefaultConfigurationCache internal constructor(
         val result = try {
             action()
         } catch (e: Throwable) {
-            entryDiscardRequested = true
+            if (startParameter.isRecoverFromCacheCorruption) {
+                entryDiscardRequested = true
+            }
             throw e
         }
         if (result.hasFailures()) {
@@ -659,6 +661,9 @@ class DefaultConfigurationCache internal constructor(
                 checkedFingerprint(candidateEntry)
             }.value
         } catch (failure: ConfigurationCacheEntryReadException) {
+            if (!startParameter.isRecoverFromCacheCorruption) {
+                throw failure.cause ?: failure
+            }
             logger.warn(
                 "The configuration cache entry could not be checked and will be discarded. The build will proceed as if the configuration cache had missed.",
                 failure
