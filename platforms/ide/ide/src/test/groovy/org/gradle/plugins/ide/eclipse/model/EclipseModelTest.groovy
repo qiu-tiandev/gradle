@@ -23,7 +23,6 @@ import org.gradle.api.internal.file.TestFiles
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.internal.xml.XmlTransformer
 import org.gradle.plugins.ide.api.XmlFileContentMerger
-import org.gradle.test.fixtures.ExpectDeprecation
 import org.gradle.util.TestUtil
 import spock.lang.Specification
 import spock.lang.Subject
@@ -42,7 +41,6 @@ class EclipseModelTest extends Specification {
         model.classpath = TestUtil.newInstance(EclipseClasspath, project)
     }
 
-    @ExpectDeprecation("Using types related to file generation tasks of IDE plugins (org.gradle.plugins.ide.eclipse.model.EclipseWtp). This behavior has been deprecated.")
     def "enables setting path variables even if wtp is not configured"() {
         given:
         model.wtp = null
@@ -55,7 +53,6 @@ class EclipseModelTest extends Specification {
         model.classpath.pathVariables == [one: new File('.'), two: new File('.')]
     }
 
-    @ExpectDeprecation("Using types related to file generation tasks of IDE plugins (org.gradle.plugins.ide.eclipse.model.EclipseWtp). This behavior has been deprecated.")
     def "enables setting path variables even if wtp component is not configured"() {
         given:
         model.wtp = TestUtil.newInstance(EclipseWtp)
@@ -69,11 +66,10 @@ class EclipseModelTest extends Specification {
         model.classpath.pathVariables == [one: new File('.')]
     }
 
-    @ExpectDeprecation("Using types related to file generation tasks of IDE plugins (org.gradle.plugins.ide.eclipse.model.EclipseWtp). This behavior has been deprecated.")
     def "enables setting path variables"() {
         given:
         model.wtp = TestUtil.newInstance(EclipseWtp)
-        model.wtp.component = TestUtil.newInstance(EclipseWtpComponent, project, Mock(XmlFileContentMerger))
+        model.wtp.component = TestUtil.newInstance(EclipseWtpComponent, project)
 
         when:
         model.pathVariables(one: new File('.'))
@@ -146,47 +142,23 @@ class EclipseModelTest extends Specification {
         model.jdt.sourceCompatibility == JavaVersion.VERSION_1_9
     }
 
-    @ExpectDeprecation("Using types related to file generation tasks of IDE plugins (org.gradle.plugins.ide.eclipse.model.EclipseWtp). This behavior has been deprecated.")
     def "can configure wtp with Actions"() {
         given:
-        def xmlTransformer = Mock(XmlTransformer)
-        def xmlMerger = Spy(XmlFileContentMerger, constructorArgs: [xmlTransformer])
-        def xmlAction = {} as Action<XmlProvider>
-        def facet = TestUtil.newInstance(EclipseWtpFacet, xmlMerger)
-        def component = TestUtil.newInstance(EclipseWtpComponent, project, xmlMerger)
+        def component = TestUtil.newInstance(EclipseWtpComponent, project)
         model.wtp = TestUtil.newInstance(EclipseWtp)
 
         when: "configure wtp"
         model.wtp({ wtp ->
             wtp.component = component
-            wtp.facet = facet
         } as Action<EclipseWtp>)
 
         then:
         model.wtp.component == component
-        model.wtp.facet == facet
-        model.wtp.facet.facets.empty
 
-        when: "configure wtp component and facet"
+        when: "configure wtp component"
         model.wtp.component({ comp -> comp.deployName = 'name' } as Action<EclipseWtpComponent>)
-        model.wtp.facet({ fac -> fac.facets.add(new Facet()) } as Action<EclipseWtpFacet>)
 
         then:
         model.wtp.component.deployName == 'name'
-        model.wtp.facet.facets.size() == 1
-
-        when: "configure wtp component and facet file"
-        model.wtp.component.file({ fcm -> fcm.xmlTransformer } as Action<XmlFileContentMerger>)
-        model.wtp.facet.file({ fcm -> fcm.xmlTransformer } as Action<XmlFileContentMerger>)
-
-        then:
-        2 * xmlMerger.getXmlTransformer()
-
-        when: "configure wtp component and facet xml"
-        model.wtp.component.file.withXml(xmlAction)
-        model.wtp.facet.file.withXml(xmlAction)
-
-        then:
-        2 * xmlTransformer.addAction(xmlAction)
     }
 }

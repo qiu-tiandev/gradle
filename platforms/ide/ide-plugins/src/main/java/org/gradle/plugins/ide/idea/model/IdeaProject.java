@@ -34,8 +34,6 @@ import java.util.Set;
  * Typically you don't have to configure IDEA module directly because Gradle configures it for you.
  *
  * <pre class='autoTested'>
- * import org.gradle.plugins.ide.idea.model.*
- *
  * plugins {
  *     id 'java'
  *     id 'idea'
@@ -58,9 +56,6 @@ import java.util.Set;
  *
  *     //you can change the output file
  *     outputFile = new File(outputFile.parentFile, 'someBetterName.ipr')
- *
- *     //you can add project-level libraries
- *     projectLibraries &lt;&lt; new ProjectLibrary(name: "my-library", classes: [new File("path/to/library")])
  *   }
  * }
  * </pre>
@@ -76,8 +71,6 @@ public abstract class IdeaProject implements IdeWorkspace {
     private String vcs;
     private Set<String> wildcards = new LinkedHashSet<>();
     private RegularFileProperty outputFile;
-    // TODO: deprecate in Gradle 9.x — only the removed ipr generation consumed this
-    private Set<ProjectLibrary> projectLibraries = new LinkedHashSet<>();
 
     @Inject
     public IdeaProject(org.gradle.api.Project project) {
@@ -232,17 +225,6 @@ public abstract class IdeaProject implements IdeWorkspace {
 
     public void setOutputFile(File outputFile) {
         this.outputFile.set(outputFile);
-    }
-
-    /**
-     * The project-level libraries to be added to the IDEA project.
-     */
-    public Set<ProjectLibrary> getProjectLibraries() {
-        return projectLibraries;
-    }
-
-    public void setProjectLibraries(Set<ProjectLibrary> projectLibraries) {
-        this.projectLibraries = projectLibraries;
     }
 
 }
