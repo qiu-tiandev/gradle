@@ -481,6 +481,8 @@ Allows running <<service_injection.adoc#toolingmodelbuilderregistry,Tooling Mode
 An explicit value will override `org.gradle.parallel` in this context.
 +
 _Default is the value of `org.gradle.parallel`._
+Relying on that default during model building is deprecated and will become an error in Gradle 10.
+See <<upgrading_version_9.adoc#deprecate_implicit_parallel_model_building, Deprecation of implicit opt-in to parallel model building>>.
 
 `org.gradle.isolated-projects=(true,false)` since-gradle-label:9.7.0[]::
 

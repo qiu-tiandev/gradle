@@ -194,6 +194,10 @@ At the same time, it is rare for builds to have problems with tasks _and_ Toolin
 Since Gradle 9.4.0, there is an additional option `org.gradle.tooling.parallel`
 that allows controlling parallelism of Tooling API actions independently of task execution parallelism.
 
+NOTE: Relying on `org.gradle.parallel` alone to enable parallel model building is deprecated and will become an error in Gradle 10.
+Set `org.gradle.tooling.parallel` explicitly.
+See <<upgrading_version_9.adoc#deprecate_implicit_parallel_model_building, Deprecation of implicit opt-in to parallel model building>> for details.
+
 For instance, you can enable Tooling parallelism without task parallelism:
 
 [source,properties]

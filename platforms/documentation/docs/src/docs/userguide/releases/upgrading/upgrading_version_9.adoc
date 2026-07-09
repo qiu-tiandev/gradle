@@ -61,7 +61,7 @@ This property is a temporary opt-out and will be removed in a future Gradle rele
 === Deprecations
 
 [[deprecate_implicit_parallel_model_building]]
-==== Deprecation of implicit opt-in into parallel model building
+==== Deprecation of implicit opt-in to parallel model building
 
 Parallel model building lets Tooling API clients (most commonly IDEs during project synchronization) build project models in parallel.
 Historically, it had no dedicated control and was enabled implicitly whenever parallel execution (`org.gradle.parallel=true` or `--parallel`) was enabled.
@@ -80,10 +80,9 @@ To avoid the warning and prepare for Gradle 10, set `org.gradle.tooling.parallel
 org.gradle.tooling.parallel=true
 ----
 
-Relatedly, the transitional system property `org.gradle.tooling.parallel.ignore-legacy-default` (used by some IDEs during sync to opt out of the legacy default) will no longer be honored in Gradle 10.
+Additionally, the transitional system property `org.gradle.tooling.parallel.ignore-legacy-default` (used by some IDEs during sync to opt out of the legacy default) will no longer be honored in Gradle 10.
 Once `org.gradle.parallel` and `org.gradle.tooling.parallel` are independent, the flag is redundant, so Gradle 10 simply ignores it.
 No action is required in Gradle 9.x; if you set it explicitly, you can remove it when upgrading to Gradle 10.
-
 
 [[changes_9.7.0]]
 == Upgrading from 9.6.0 and earlier
