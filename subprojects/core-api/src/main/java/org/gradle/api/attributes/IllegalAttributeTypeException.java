@@ -40,7 +40,14 @@ import java.util.List;
 public final class IllegalAttributeTypeException extends IllegalArgumentException implements ResolutionProvider {
     private final List<String> resolutions;
 
-    /* package */ IllegalAttributeTypeException(String attributeName, Class<?> type) {
+    /**
+     * Creates a new exception.
+     *
+     * @param attributeName the name of the attribute
+     * @param type the invalid type used for the attribute
+     * @since 9.8.0
+     */
+    public IllegalAttributeTypeException(String attributeName, Class<?> type) {
         super(buildMessage(attributeName, type));
         this.resolutions = buildResolutions(type);
     }

@@ -17,6 +17,7 @@
 package org.gradle.api.attributes;
 
 import org.gradle.api.Named;
+import org.gradle.api.internal.attributes.AttributeTypeValidator;
 import org.gradle.internal.deprecation.DeprecationLogger;
 
 /**
@@ -68,7 +69,7 @@ public class Attribute<T> implements Named {
         "org.jetbrains.kotlin.gradle.targets.native.toolchain.KotlinNativeBundleArtifactFormat$KotlinNativeBundleArtifactsTypes";
 
     private static void validateSupportedType(String name, Class<?> type) {
-        if (type == String.class || type == Boolean.class || Number.class.isAssignableFrom(type) || Named.class.isAssignableFrom(type)) {
+        if (AttributeTypeValidator.isSupportedAttributeType(type)) {
             return;
         }
         if (KGP_NATIVE_BUNDLE_ENUM_FQN.equals(type.getName())) {

@@ -1437,5 +1437,132 @@ final class EnumAttributeIntegrationTest extends AbstractIntegrationSpec {
         PLAIN_DESC | PLAIN_ENUM  | UNSUPPORTED_TYPE_MSG
         NAMED_DESC | NAMED_ENUM  | "No enum constant MyEnum.NOT_A_CONSTANT"
     }
+    def "registering an AttributeCompatibilityRule typed on a plain Enum fails when the rule fires"() {
+        // The attribute itself is a String (which passes Attribute.of), but the rule is
+        // typed on a plain enum, which Groovy allows to register via loose generics.
+        // AttributeTypeValidator.validateRuleTypeParameter walks the rule class's
+        // superinterfaces at first fire, extracts the plain-enum type argument, and throws.
+        given:
+        settingsFile("""
+            include 'consumer', 'producer'
+        """)
+
+        file("producer/output.txt") << "sample output"
+        buildFile("producer/build.gradle", """
+            def ATTRIBUTE_TYPE = Attribute.of("myAttr", String.class)
+            configurations {
+                consumable("myVariant") {
+                    attributes { attribute(ATTRIBUTE_TYPE, "PRODUCER") }
+                    outgoing.artifact(file("output.txt"))
+                }
+            }
+        """)
+
+        buildFile("consumer/build.gradle", """
+            enum MyPlainEnum { FOO, BAR }
+
+            def ATTRIBUTE_TYPE = Attribute.of("myAttr", String.class)
+
+            abstract class BadRule implements AttributeCompatibilityRule<MyPlainEnum> {
+                void execute(CompatibilityCheckDetails details) { details.compatible() }
+            }
+
+            dependencies {
+                attributesSchema {
+                    attribute(ATTRIBUTE_TYPE) {
+                        compatibilityRules.add(BadRule)
+                    }
+                }
+            }
+
+            configurations {
+                dependencyScope("myDeps")
+                resolvable("myResolver") {
+                    extendsFrom(configurations.getByName("myDeps"))
+                    attributes { attribute(ATTRIBUTE_TYPE, "CONSUMER") }
+                }
+            }
+
+            dependencies { myDeps(project(":producer")) }
+
+            tasks.register("resolve") {
+                def files = configurations.myResolver.incoming.artifactView {}.files
+                doLast { files.each { println("Resolved: " + it.name) } }
+            }
+        """)
+
+        expect:
+        fails(":consumer:resolve")
+        failure.assertHasCause("Unsupported type 'MyPlainEnum' declared as the type parameter of attribute rule 'BadRule'. Attribute values must be of type String, Boolean, a subtype of Number, or implement org.gradle.api.Named.")
+    }
+
+    def "registering an AttributeDisambiguationRule typed on a plain Enum fails when the rule fires"() {
+        // For the disambiguation rule to fire we need multiple *compatible* candidates.
+        // Producer offers two variants with distinct values on the target attribute — a
+        // compatibility rule (typed correctly on String) makes both compatible; then the
+        // badly-typed disambiguation rule is invoked to pick between them and trips our
+        // validator.
+        given:
+        settingsFile("""
+            include 'consumer', 'producer'
+        """)
+
+        file("producer/foo.txt") << "foo output"
+        file("producer/bar.txt") << "bar output"
+        buildFile("producer/build.gradle", """
+            def ATTRIBUTE_TYPE = Attribute.of("myAttr", String.class)
+            configurations {
+                consumable("fooVariant") {
+                    attributes { attribute(ATTRIBUTE_TYPE, "foo") }
+                    outgoing.artifact(file("foo.txt"))
+                }
+                consumable("barVariant") {
+                    attributes { attribute(ATTRIBUTE_TYPE, "bar") }
+                    outgoing.artifact(file("bar.txt"))
+                }
+            }
+        """)
+
+        buildFile("consumer/build.gradle", """
+            enum MyPlainEnum { FOO, BAR }
+
+            def ATTRIBUTE_TYPE = Attribute.of("myAttr", String.class)
+
+            abstract class AlwaysCompatibleRule implements AttributeCompatibilityRule<String> {
+                void execute(CompatibilityCheckDetails<String> details) { details.compatible() }
+            }
+            abstract class BadDisambiguationRule implements AttributeDisambiguationRule<MyPlainEnum> {
+                void execute(MultipleCandidatesDetails details) { details.closestMatch(details.candidateValues.first()) }
+            }
+
+            dependencies {
+                attributesSchema {
+                    attribute(ATTRIBUTE_TYPE) {
+                        compatibilityRules.add(AlwaysCompatibleRule)
+                        disambiguationRules.add(BadDisambiguationRule)
+                    }
+                }
+            }
+
+            configurations {
+                dependencyScope("myDeps")
+                resolvable("myResolver") {
+                    extendsFrom(configurations.getByName("myDeps"))
+                    attributes { attribute(ATTRIBUTE_TYPE, "foo") }
+                }
+            }
+
+            dependencies { myDeps(project(":producer")) }
+
+            tasks.register("resolve") {
+                def files = configurations.myResolver.incoming.artifactView {}.files
+                doLast { files.each { println("Resolved: " + it.name) } }
+            }
+        """)
+
+        expect:
+        fails(":consumer:resolve")
+        failure.assertHasCause("Unsupported type 'MyPlainEnum' declared as the type parameter of attribute rule 'BadDisambiguationRule'. Attribute values must be of type String, Boolean, a subtype of Number, or implement org.gradle.api.Named.")
+    }
     // endregion un-named enums fail
 }

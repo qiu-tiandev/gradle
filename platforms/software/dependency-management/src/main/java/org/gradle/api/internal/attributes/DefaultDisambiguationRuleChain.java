@@ -79,7 +79,13 @@ public class DefaultDisambiguationRuleChain<T> implements DisambiguationRuleChai
         ConfigurableRule<MultipleCandidatesDetails<T>> rule,
         Instantiator instantiator
     ) {
-        return new InstantiatingAction<>(DefaultConfigurableRules.of(rule), instantiator, new ExceptionHandler<>(rule.getRuleClass()));
+        Class<?> ruleClass = rule.getRuleClass();
+        Action<MultipleCandidatesDetails<T>> delegate =
+            new InstantiatingAction<>(DefaultConfigurableRules.of(rule), instantiator, new ExceptionHandler<>(ruleClass));
+        return details -> {
+            AttributeTypeValidator.validateRuleTypeParameter(ruleClass, AttributeDisambiguationRule.class);
+            delegate.execute(details);
+        };
     }
 
     private static class ExceptionHandler<T> implements InstantiatingAction.ExceptionHandler<MultipleCandidatesDetails<T>> {
