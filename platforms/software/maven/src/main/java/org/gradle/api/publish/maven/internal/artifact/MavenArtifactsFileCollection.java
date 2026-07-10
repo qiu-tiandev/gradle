@@ -117,13 +117,17 @@ class MavenArtifactsFileCollection extends AbstractFileCollection implements Pub
             }
             if (inner instanceof LazyPublishArtifact lazy) {
                 if (lazy.getProvider().calculateExecutionTimeValue().hasFixedValue()) {
-                    // Provider is settled at configuration time. Reuse the existing
-                    // File / FileSystemLocation / Task / generic-Object dispatch inside
-                    // LazyPublishArtifact.getDelegate() to arrive at a File.
+                    // Invariant: `hasFixedValue()` reports true iff the provider's value chain
+                    // does not require a producer task to have executed. Under that invariant,
+                    // `lazy.getFile()` -> `getDelegate()` -> `provider.get()` is safe at
+                    // configuration time — no `TransformBackedProvider.beforeRead` guard can
+                    // trip, and the File / FileSystemLocation / Task / generic-Object dispatch
+                    // inside `getDelegate()` will resolve to a File.
                     return Providers.of(lazy.getFile());
                 } else {
-                    // Provider is still changing (e.g. issue #29253's .map(...) chain).
-                    // Capture the raw provider; the codec defers resolution to task execution.
+                    // Provider still has changing content (e.g. issue #29253's `.map(...)`
+                    // chain over a task output). Capture the raw provider; the codec defers
+                    // resolution to task execution time.
                     @SuppressWarnings("unchecked")
                     var fileProvider = (ProviderInternal<File>) lazy.getProvider();
                     return fileProvider;
