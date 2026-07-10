@@ -66,4 +66,11 @@ class ParallelModelBuildingDeprecationCrossVersionSpec extends ToolingApiSpecifi
             connection.model(GradleProject).get()
         }
     }
+
+    def "no deprecation is reported when running tasks with parallel execution enabled"() {
+        expect:
+        withBuild { build ->
+            build.forTasks("help").withArguments("--parallel")
+        }
+    }
 }
