@@ -44,6 +44,7 @@ class ParallelModelBuildingDeprecationCrossVersionSpec extends ToolingApiSpecifi
         args << [
             [],
             ["-Dorg.gradle.tooling.parallel.ignore-legacy-default=true"],
+            ["-Dorg.gradle.tooling.parallel.ignore-legacy-default=false"],
         ]
     }
 
