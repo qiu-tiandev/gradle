@@ -120,6 +120,10 @@ public class RootBuildLifecycleBuildActionExecutor {
      * This applies only to Vintage model building, which is the only mode where the implicit
      * {@code org.gradle.parallel} -> parallel model building link exists.
      * <p>
+     * "Vintage" refers to the resolved {@link BuildModelParameters} mode, not the user-facing opt-in:
+     * model building with Configuration Cache enabled currently falls back to Vintage (models cannot be
+     * cached yet), so such builds are in scope of this deprecation. Isolated Projects model building is not.
+     * <p>
      * The nag is intentionally emitted regardless of the {@code org.gradle.tooling.parallel.ignore-legacy-default}
      * system property: in a future major, having {@code org.gradle.parallel} enabled without an explicit value
      * for {@code org.gradle.tooling.parallel} during model building will be an error, so users relying on the
